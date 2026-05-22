@@ -172,7 +172,7 @@ Phase 0      Phase 1       Phase 2        Phase 3      Phase 4       Phase 5    
 |---|------|---------|
 | 3.1 | Domain result models | `Recommendation`, `RecommendationBatch` (architecture §5.3–5.4) |
 | 3.2 | `LLMClient` interface | `complete(request) -> response`; infrastructure adapter for chosen provider |
-| 3.3 | Provider implementation | OpenAI / Azure / Ollama — configurable via env |
+| 3.3 | Provider implementation | Groq / Ollama — configurable via env |
 | 3.4 | `PromptBuilder` | System + user messages per architecture §7.2: role, prefs, candidate JSON, constraints |
 | 3.5 | Structured output | Request JSON mode; document expected schema (architecture §7.3) |
 | 3.6 | `RankingOrchestrator` | Build prompt → call LLM → parse response |

@@ -43,7 +43,7 @@ flowchart LR
 | Dependency | Role |
 |------------|------|
 | [ManikaSaini/zomato-restaurant-recommendation](https://huggingface.co/datasets/ManikaSaini/zomato-restaurant-recommendation) | Source of truth for restaurant records |
-| LLM provider (e.g. OpenAI, Anthropic, local Ollama) | Ranking, explanations, optional summary |
+| LLM provider (e.g. Groq, Anthropic, local Ollama) | Ranking, explanations, optional summary |
 
 ---
 
@@ -428,7 +428,7 @@ Language-agnostic layout; implement in Python (FastAPI + Streamlit), Node, or Ja
 | Dataset load | `datasets` + `huggingface_hub` | Native HF integration per context |
 | API | FastAPI | Lightweight, OpenAPI docs |
 | UI (demo) | Streamlit or React | Fast preference forms + result cards |
-| LLM | OpenAI / Azure OpenAI / Ollama | Configurable via `LLMClient` adapter |
+| LLM | Groq / Ollama | Configurable via `LLMClient` adapter |
 | Persistence (optional) | SQLite + SQLAlchemy | Simple local cache of ingested rows |
 | Config | `pydantic-settings` + `.env` | Secrets outside code |
 
