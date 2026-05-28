@@ -46,6 +46,10 @@ class PreferenceRequest(BaseModel):
     min_rating: float = Field(default=3.5, ge=0.0, le=5.0)
     additional_preferences: str | None = None
 
+@app.get("/")
+def read_root():
+    return {"status": "online", "message": "Zomato AI Restaurant Recommender API"}
+
 @app.get("/health")
 def health():
     if recommendation_service is None:
