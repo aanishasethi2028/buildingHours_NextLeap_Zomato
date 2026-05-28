@@ -96,7 +96,13 @@ class CandidateFilter:
         self, restaurants: list[Restaurant], preferences: UserPreferences
     ) -> list[Restaurant]:
         city = preferences.canonical_location
-        return [r for r in restaurants if r.location == city]
+        from domain.normalization import normalize_match_key
+        target = normalize_match_key(city)
+        return [
+            r for r in restaurants
+            if normalize_match_key(r.location) == target
+            or (r.area and normalize_match_key(r.area) == target)
+        ]
 
     def _apply_budget(
         self, restaurants: list[Restaurant], preferences: UserPreferences

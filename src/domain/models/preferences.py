@@ -55,3 +55,18 @@ class UserPreferences(BaseModel):
         if rating < 0.0 or rating > 5.0:
             raise ValueError("min_rating must be between 0 and 5")
         return rating
+
+    @field_validator("additional_preferences", mode="before")
+    @classmethod
+    def sanitize_additional_prefs(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        import re
+        import unicodedata
+        text = unicodedata.normalize("NFC", str(value).strip())
+        if not text:
+            return None
+        text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+        if len(text) > 500:
+            text = text[:500]
+        return text

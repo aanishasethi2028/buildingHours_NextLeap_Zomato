@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+import time
 from domain.models.preferences import UserPreferences
 from domain.models.recommendation import Recommendation, RecommendationBatch
 from domain.models.restaurant import Restaurant
@@ -55,13 +56,17 @@ class RankingOrchestrator:
             )
 
         try:
-            batch = self._rank_with_llm(preferences, candidates, top_k, strict_retry=False)
-            if len(batch.recommendations) >= min(top_k, len(candidates)):
-                return batch
-            # Retry once with stricter JSON instruction if too few valid items
-            logger.warning("LLM returned insufficient valid items; retrying with strict JSON")
+            try:
+                batch = self._rank_with_llm(preferences, candidates, top_k, strict_retry=False)
+                if len(batch.recommendations) >= min(top_k, len(candidates)):
+                    return batch
+                logger.warning("LLM returned insufficient valid items; retrying with strict JSON")
+            except LLMResponseParseError as exc:
+                logger.warning("LLM returned invalid JSON on first attempt: %s. Retrying with strict JSON", exc)
+
+            # Retry once with stricter JSON instruction
             batch = self._rank_with_llm(preferences, candidates, top_k, strict_retry=True)
-            if batch.recommendations:
+            if len(batch.recommendations) >= min(top_k, len(candidates)) or batch.recommendations:
                 return batch
         except (LLMError, LLMResponseParseError) as exc:
             logger.warning("LLM ranking failed: %s", exc)
@@ -101,7 +106,15 @@ class RankingOrchestrator:
             max_tokens=self._settings.llm_max_tokens,
             json_mode=True,
         )
+        start_time = time.perf_counter()
         response = self._llm_client.complete(request)  # type: ignore[union-attr]
+        latency = time.perf_counter() - start_time
+        logger.info(
+            "LLM completion latency: %.3fs for model %s. Candidates considered: %d",
+            latency,
+            self._settings.llm_model,
+            len(candidates),
+        )
         parsed = parse_llm_output(response.content)
         valid_ids = {c.id for c in candidates}
         validated = validate_and_deduplicate(parsed, valid_ids)

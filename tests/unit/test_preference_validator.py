@@ -75,3 +75,20 @@ class TestPreferenceValidator:
 
     def test_sanitize_additional_whitespace_only(self):
         assert PreferenceValidator.sanitize_additional("   ") is None
+
+    def test_sanitize_additional_control_characters(self):
+        text = "Hello\x00World\x07!"
+        result = PreferenceValidator.sanitize_additional(text)
+        assert result == "HelloWorld!"
+
+    def test_user_preferences_direct_instantiation_sanitizes(self):
+        from domain.models.preferences import UserPreferences
+        prefs = UserPreferences(
+            location="Delhi",
+            budget=UserBudget.MEDIUM,
+            cuisine="Chinese",
+            min_rating=4.0,
+            additional_preferences="Hello\x00World\x07!" + "a" * 600,
+        )
+        assert prefs.additional_preferences == "HelloWorld!" + "a" * 489
+        assert len(prefs.additional_preferences) == 500

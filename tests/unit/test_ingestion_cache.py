@@ -62,6 +62,44 @@ class TestCacheRoundTrip:
         with pytest.raises(DataIngestionError):
             service.load_from_cache()
 
+    def test_ingest_fallback_to_cache(self, tmp_path: Path, sample_restaurants: list[Restaurant], monkeypatch: pytest.MonkeyPatch):
+        from infrastructure.config import Settings
+        from infrastructure.ingestion import DataIngestionError
+
+        cache_file = tmp_path / "restaurants.json"
+        settings = Settings(data_cache_path=cache_file, force_refresh_cache=True)
+        service = DataIngestionService(settings)
+        service.save_cache(sample_restaurants)
+
+        def mock_ingest():
+            raise RuntimeError("Hugging Face API is down")
+
+        monkeypatch.setattr(service, "ingest_from_huggingface", mock_ingest)
+
+        loaded = service.load_or_ingest()
+        assert len(loaded) == 1
+        assert loaded[0].name == "Test Place"
+
+    def test_ingest_fails_no_cache(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+        from infrastructure.config import Settings
+        from infrastructure.ingestion import DataIngestionError
+
+        cache_file = tmp_path / "restaurants.json"
+        settings = Settings(data_cache_path=cache_file, force_refresh_cache=True)
+        service = DataIngestionService(settings)
+
+        if cache_file.exists():
+            cache_file.unlink()
+
+        def mock_ingest():
+            raise RuntimeError("Hugging Face API is down")
+
+        monkeypatch.setattr(service, "ingest_from_huggingface", mock_ingest)
+
+        with pytest.raises(DataIngestionError) as exc_info:
+            service.load_or_ingest()
+        assert "no cache is present" in str(exc_info.value)
+
 
 class TestRepositoryFromIngestion:
     def test_load(self, sample_restaurants: list[Restaurant]):

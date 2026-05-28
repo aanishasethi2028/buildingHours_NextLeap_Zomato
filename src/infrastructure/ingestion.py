@@ -49,11 +49,31 @@ class DataIngestionService:
             return self.load_from_cache(cache_path)
 
         logger.info("Ingesting dataset from Hugging Face: %s", self._settings.hf_dataset_id)
-        restaurants = self.ingest_from_huggingface()
-        if not restaurants:
-            raise DataIngestionError("Ingestion produced zero restaurants (EC-DATA-03)")
-        self.save_cache(restaurants, cache_path)
-        return restaurants
+        try:
+            restaurants = self.ingest_from_huggingface()
+            if not restaurants:
+                raise DataIngestionError("Ingestion produced zero restaurants (EC-DATA-03)")
+            self.save_cache(restaurants, cache_path)
+            return restaurants
+        except Exception as exc:
+            if self._cache_exists(cache_path):
+                logger.warning(
+                    "Hugging Face ingestion failed: %s. Falling back to cached copy at %s.",
+                    exc,
+                    cache_path,
+                )
+                try:
+                    return self.load_from_cache(cache_path)
+                except DataIngestionError as cache_exc:
+                    logger.critical("Failed to load corrupt cache during ingestion fallback: %s", cache_exc)
+                    raise DataIngestionError(
+                        f"Ingestion failed and cached copy is corrupt: {cache_exc} (EC-DATA-11)"
+                    ) from exc
+            else:
+                logger.critical("Hugging Face ingestion failed and no cached copy is present: %s", exc)
+                raise DataIngestionError(
+                    f"Ingestion failed and no cache is present: {exc} (EC-DATA-01)"
+                ) from exc
 
     def ingest_from_huggingface(self) -> list[Restaurant]:
         dataset = load_dataset(
