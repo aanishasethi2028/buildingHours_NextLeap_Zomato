@@ -5,8 +5,17 @@ from unittest.mock import MagicMock, patch
 from domain.models.recommendation import RecommendationBatch
 from presentation.api import app
 
+import time
+from presentation import api
+
 def test_health_check():
     with TestClient(app) as client:
+        # Wait up to 5 seconds for the background initialization thread to complete
+        for _ in range(50):
+            if api.recommendation_service is not None:
+                break
+            time.sleep(0.1)
+
         response = client.get("/health")
         assert response.status_code == 200
         data = response.json()

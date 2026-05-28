@@ -1,3 +1,4 @@
+import threading
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +16,16 @@ recommendation_service = None
 async def lifespan(app: FastAPI):
     global recommendation_service
     settings = get_settings()
-    recommendation_service = create_recommendation_service(settings)
+    
+    def initialize():
+        global recommendation_service
+        try:
+            recommendation_service = create_recommendation_service(settings)
+        except Exception as exc:
+            import sys
+            print(f"CRITICAL: Failed to initialize recommendation service: {exc}", file=sys.stderr)
+            
+    threading.Thread(target=initialize, daemon=True).start()
     yield
 
 app = FastAPI(title="Zomato Restaurant Recommender API", lifespan=lifespan)
