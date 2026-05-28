@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "dataset_id": "ManikaSaini/zomato-restaurant-recommendation",
+  "split": "train",
+  "row_count": 4851,
+  "written_at": "2026-05-18T11:56:20.687957+00:00"
+}
