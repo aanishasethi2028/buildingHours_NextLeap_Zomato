@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
 export default function SearchCard({ onSearch, loading }) {
   const [locations, setLocations] = useState(["Indiranagar", "Mumbai", "Delhi", "Bangalore"]);
   const [location, setLocation] = useState("Indiranagar");
@@ -12,7 +14,7 @@ export default function SearchCard({ onSearch, loading }) {
   const [showCustomCuisineInput, setShowCustomCuisineInput] = useState(false);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/locations')
+    axios.get(`${API_BASE_URL}/api/locations`)
       .then(res => {
         if (res.data.locations && res.data.locations.length > 0) {
           setLocations(res.data.locations);

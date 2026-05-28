@@ -5,6 +5,8 @@ import SearchCard from './components/SearchCard';
 import AICurationBox from './components/AICurationBox';
 import RestaurantCard from './components/RestaurantCard';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
 export default function App() {
   const [recommendations, setRecommendations] = useState([]);
   const [summary, setSummary] = useState('');
@@ -17,7 +19,7 @@ export default function App() {
     setHasSearched(true);
     setError(null);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/recommend', prefs);
+      const response = await axios.post(`${API_BASE_URL}/api/recommend`, prefs);
       setRecommendations(response.data.recommendations || []);
       setSummary(response.data.summary || '');
     } catch (err) {
